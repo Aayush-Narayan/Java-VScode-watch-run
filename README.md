@@ -20,19 +20,13 @@ npm install chokidar       # installs the watcher
 # Folder PATH:
 root:
 
-├───.vscode
-
-      └─── tasks.json
-      
-├───out
-
-    └─── FileName.class
-    
-└───src
-
-    └─── FileName.java
-
-└─── runMain.js
+      ├───.vscode
+            └─── tasks.json
+      ├───out
+          └─── FileName.class
+      └───src
+          └─── FileName.java
+      └─── runMain.js
 
 # Note:
 - After setup, just press `Ctrl + Shift + B` to run the task, then turn on the Auto Save feature in VS code.
