@@ -19,12 +19,19 @@ npm install chokidar       # installs the watcher
 
 # Folder PATH:
 root:
+
 ├───.vscode
+
       └─── tasks.json
+      
 ├───out
+
     └─── FileName.class
+    
 └───src
+
     └─── FileName.java
+
 └─── runMain.js
 
 # Note:
