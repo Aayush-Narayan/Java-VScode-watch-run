@@ -2,8 +2,10 @@
 🚀 Java-in-Seconds for VS Code Save your file → see the result instantly. No clicks, no extensions, no Maven—just Ctrl + Shift + B and watch your code run like magic!
 
 # Install it once, inside the project folder on your root depository:
-npm init -y                # creates package.json (optional but handy)
-npm install chokidar       # installs the watcher
+ ### creates package.json (optional but handy)
+- npm init -y
+ ### installs the watcher
+- npm install chokidar
 
 ## Usage
 1. Clone repo.
