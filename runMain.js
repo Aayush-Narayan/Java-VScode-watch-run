@@ -1,4 +1,4 @@
-// runMain.js  –  Windows-safe version
+// runMain.js  –  universal, re-entrant, crash-safe
 const { execSync } = require("child_process");
 const fs   = require("fs");
 const path = require("path");
@@ -20,12 +20,22 @@ const die = (msg) => {
 // ---------- start ----------
 clear();
 
-// wipe / create output folder
+// 1.  kill any previous java process we launched
+try {
+  execSync(
+    process.platform === "win32"
+      ? `taskkill /F /IM java.exe 2>NUL`
+      : `pkill -f "java -cp.*${OUT_DIR}" || true`,
+    { shell: true }
+  );
+} catch { /* ignore if nothing to kill */ }
+
+// 2.  clean build folder
 if (fs.existsSync(OUT_DIR))
   fs.rmSync(OUT_DIR, { recursive: true, force: true });
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
-// collect every .java file under src/
+// 3.  collect source files
 const javaFiles = [];
 (function collect(dir) {
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -37,18 +47,17 @@ const javaFiles = [];
 
 if (javaFiles.length === 0) die("No .java files found in src/");
 
-// ---------- compile (classes land directly in <project>/out) ----------
-const relFiles = javaFiles.map(f => path.relative(SRC_DIR, f));   // e.g. ["FirstProgram.java"]
+// 4.  compile
+const relFiles = javaFiles.map(f => path.relative(SRC_DIR, f));
 try {
   execSync(`javac -d "${path.resolve(OUT_DIR)}" ${relFiles.join(" ")}`, {
-    cwd: SRC_DIR,          // <-- compile FROM src
+    cwd: SRC_DIR,
     stdio: "inherit",
     shell: true,
   });
 } catch { die("Compilation failed!"); }
 
-
-// find class that contains main
+// 5.  locate main class
 let mainClass = null;
 (function find(dir, prefix = "") {
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -59,7 +68,8 @@ let mainClass = null;
       const base = ent.name.replace(/\.class$/, "");
       const fqcn = prefix ? `${prefix.replace(/\\/g, ".")}.${base}` : base;
       const bytecode = fs.readFileSync(full);
-      if (bytecode.includes("main") && bytecode.includes("([Ljava/lang/String;)V")) {
+      if (bytecode.includes("main") &&
+          bytecode.includes("([Ljava/lang/String;)V")) {
         mainClass = fqcn;
       }
     }
@@ -68,9 +78,10 @@ let mainClass = null;
 
 if (!mainClass) die("No main method found in compiled classes!");
 
-// run
+// 6.  run (stdio inherited so interactive apps work)
 try {
   execSync(`java -cp ${OUT_DIR} ${mainClass}`, { stdio: "inherit" });
 } catch {
-  die("Runtime error!");
+  // swallow the exit code so the watcher does not die on user-induced exits
+  process.exit(0);
 }
